@@ -4679,7 +4679,7 @@ tbody.collapse.in {
   content: " ";
   display: table;
 }
-.navbar-header:after {
+.:after {
   clear: both;
 }
 @media (min-width: 768px) {
