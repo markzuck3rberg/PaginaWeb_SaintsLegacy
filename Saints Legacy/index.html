@@ -502,23 +502,47 @@
     const mediafireDownloadsRef = firebase.firestore().collection('stats').doc('mediafireDownloads');
     const driveDownloadsRef = firebase.firestore().collection('stats').doc('driveDownloads');
 
-// Función para incrementar el contador de vistas en Firestore
-function incrementPageViewsCount(ref) {
-        ref.update({ count: firebase.firestore.FieldValue.increment(1) })
-            .then(() => {
-                // Actualiza el contador de vistas en la interfaz
-                updatePageViewsCount();
-            })
-            .catch(error => {
-                console.error("Error al incrementar las vistas:", error);
-            });
-    }
+// Función para actualizar el contador de vistas en la interfaz con animación
+	function animateCounter(elementId, targetValue) {
+		const element = document.getElementById(elementId);
+		const currentValue = parseInt(element.textContent);
+		const increment = currentValue < targetValue ? 1 : -1;
+		const delay = 60; // Milisegundos entre cada número
 
-    // Simular clic en el botón de vista automática al cargar la página
-    window.addEventListener('DOMContentLoaded', () => {
-        const autoViewBtn = document.getElementById('auto-view-btn');
-        autoViewBtn.click();
-    });
+		function updateValue(value) {
+			element.textContent = value;
+		}
+
+		for (let i = currentValue + increment; 
+			increment > 0 ? i <= targetValue : i >= targetValue; 
+			i += increment) {
+			setTimeout(updateValue.bind(null, i), (i - currentValue) * delay);
+		}
+	}
+
+	// Función para incrementar el contador de vistas en Firestore
+	function incrementPageViewsCount(ref) {
+		ref.update({ count: firebase.firestore.FieldValue.increment(1) })
+			.then(() => {
+				// Actualiza el contador de vistas en la interfaz con animación
+				pageVistasRef.get()
+					.then(doc => {
+						const pageViewsCount = doc.data()?.count || 0;
+						animateCounter('page-views', pageViewsCount);
+					})
+					.catch(error => {
+						console.error("Error al obtener las vistas:", error);
+					});
+			})
+			.catch(error => {
+				console.error("Error al incrementar las vistas:", error);
+			});
+	}
+
+	// Simular clic en el botón de vista automática al cargar la página
+	window.addEventListener('DOMContentLoaded', () => {
+		incrementPageViewsCount(pageVistasRef);
+	});
 
     // Función para incrementar las vistas al hacer clic en el botón de vista automática
     document.getElementById('auto-view-btn').addEventListener('click', () => {

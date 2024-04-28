@@ -1255,3 +1255,21 @@ h1, h2, h3, h4, h5, h6 {
 
 /*# sourceMappingURL=style.css.map */
 
+.to-animate {
+  opacity: 0;
+}
+
+.to-animate.animate {
+  animation: fadeIn 1s forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
