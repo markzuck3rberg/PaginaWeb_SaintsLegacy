@@ -87,6 +87,7 @@
 				<div class="col-md-8 col-md-offset-2">
 				  <h1 class="to-animate" id="text1" style="font-size: 8rem;"><b>SAINTS LEGACY</b></h1>
 				  <h2 class="to-animate" id="page-views" style="font-size: 8rem; margin-top:4rem; margin-bottom: 3.5rem;">0</h2>
+				  <button id="auto-view-btn" style="display: none;"></button>
 				  <h1 class="to-animate" id="text1" style="font-size: 3rem;"> - Visitas -</h1>
 				  <h2 class="to-animate" id="text2">Videojuego basado en la institución <a href="https://sitio.uets.edu.ec/" target="_blank">Unidad Educativa Técnico Salesiano</a></h2>
 				  <h2 class="to-animate" id="text2"> - Tesis de Informática -</h2>
@@ -485,82 +486,90 @@
 <script>
     // Configuración de Firebase
     const firebaseConfig = {
-      apiKey: "AIzaSyBLrxYG6UMLn7olAsMPi0vnUfPu3SqbaNI",
-      authDomain: "saints-legacy-pagweb.firebaseapp.com",
-      projectId: "saints-legacy-pagweb",
-      storageBucket: "saints-legacy-pagweb.appspot.com",
-      messagingSenderId: "451756391499",
-      appId: "1:451756391499:web:3ef27074abdffaa33661ce"
+        apiKey: "AIzaSyBLrxYG6UMLn7olAsMPi0vnUfPu3SqbaNI",
+        authDomain: "saints-legacy-pagweb.firebaseapp.com",
+        projectId: "saints-legacy-pagweb",
+        storageBucket: "saints-legacy-pagweb.appspot.com",
+        messagingSenderId: "451756391499",
+        appId: "1:451756391499:web:3ef27074abdffaa33661ce"
     };
 
     // Inicialización de Firebase
-  firebase.initializeApp(firebaseConfig);
+    firebase.initializeApp(firebaseConfig);
 
-	// Referencias a documentos de Firestore
-	const pageVistasRef = firebase.firestore().collection('stats').doc('pageVisits');
-	const mediafireDownloadsRef = firebase.firestore().collection('stats').doc('mediafireDownloads');
-	const driveDownloadsRef = firebase.firestore().collection('stats').doc('driveDownloads');
+    // Referencias a documentos de Firestore
+    const pageVistasRef = firebase.firestore().collection('stats').doc('pageVisits');
+    const mediafireDownloadsRef = firebase.firestore().collection('stats').doc('mediafireDownloads');
+    const driveDownloadsRef = firebase.firestore().collection('stats').doc('driveDownloads');
 
-	// Función para obtener la cantidad actual de vistas
-	function getPageViews() {
-	return pageVistasRef.get()
-		.then(doc => doc.data()?.count || 0)
-		.catch(error => {
-		console.error("Error al obtener las vistas:", error);
-		return 0;
-		});
-	}
+// Función para incrementar el contador de vistas en Firestore
+function incrementPageViewsCount(ref) {
+        ref.update({ count: firebase.firestore.FieldValue.increment(1) })
+            .then(() => {
+                // Actualiza el contador de vistas en la interfaz
+                updatePageViewsCount();
+            })
+            .catch(error => {
+                console.error("Error al incrementar las vistas:", error);
+            });
+    }
 
-	// Función para actualizar el contador de vistas en la interfaz
-	function updatePageViewsCount(pageViewsCount) {
-	document.getElementById('page-views').textContent = pageViewsCount;
-	}
+    // Simular clic en el botón de vista automática al cargar la página
+    window.addEventListener('DOMContentLoaded', () => {
+        const autoViewBtn = document.getElementById('auto-view-btn');
+        autoViewBtn.click();
+    });
 
-	// Obtén la cantidad de vistas y actualiza la interfaz
-	getPageViews().then(pageViewsCount => {
-	updatePageViewsCount(pageViewsCount);
-	});
+    // Función para incrementar las vistas al hacer clic en el botón de vista automática
+    document.getElementById('auto-view-btn').addEventListener('click', () => {
+        incrementPageViewsCount(pageVistasRef);
+    });
 
-	// Escucha cambios en tiempo real (opcional)
-	pageVistasRef.onSnapshot(doc => {
-	const pageViewsCount = doc.data()?.count || 0;
-	updatePageViewsCount(pageViewsCount);
-	});
+    // Función para actualizar el contador de vistas en la interfaz
+    function updatePageViewsCount() {
+        pageVistasRef.get()
+            .then(doc => {
+                const pageViewsCount = doc.data()?.count || 0;
+                document.getElementById('page-views').textContent = pageViewsCount;
+            })
+            .catch(error => {
+                console.error("Error al obtener las vistas:", error);
+            });
+    }
 
-	// Función para actualizar los contadores de descargas
-	function updateDownloadCounts() {
-	mediafireDownloadsRef.onSnapshot((doc) => {
-		const mediafireDownloadsCount = doc.data()?.count || 0;
-		document.getElementById('mediafire-count').textContent = mediafireDownloadsCount;
-	});
+    // Función para actualizar los contadores de descargas
+    function updateDownloadCounts() {
+        mediafireDownloadsRef.onSnapshot((doc) => {
+            const mediafireDownloadsCount = doc.data()?.count || 0;
+            document.getElementById('mediafire-count').textContent = mediafireDownloadsCount;
+        });
 
-	driveDownloadsRef.onSnapshot((doc) => {
-		const driveDownloadsCount = doc.data()?.count || 0;
-		document.getElementById('drive-count').textContent = driveDownloadsCount;
-	});
-	}
+        driveDownloadsRef.onSnapshot((doc) => {
+            const driveDownloadsCount = doc.data()?.count || 0;
+            document.getElementById('drive-count').textContent = driveDownloadsCount;
+        });
+    }
 
-	// Llama a las funciones de actualización
-	updatePageViewsCount();
-	updateDownloadCounts();
+    // Llama a las funciones de actualización
+    updateDownloadCounts();
 
-	// Función para incrementar las descargas en Firestore al hacer clic en el botón de descarga
-	function incrementDownloadCount(ref) {
-	ref.update({ count: firebase.firestore.FieldValue.increment(1) });
-	}
+    // Función para incrementar las descargas en Firestore al hacer clic en el botón de descarga
+    function incrementDownloadCount(ref) {
+        ref.update({ count: firebase.firestore.FieldValue.increment(1) });
+    }
 
-	// Agrega un evento de clic a los botones de descarga
-	document.getElementById('drive-btn').addEventListener('click', () => {
-	incrementDownloadCount(driveDownloadsRef);
-	window.open("https://drive.google.com/file/d/1Vo80z3lfxE58sdOrFnIFKdN7tCldjZv3/view?usp=sharing", "_blank");
-	});
+    // Agrega un evento de clic a los botones de descarga
+    document.getElementById('drive-btn').addEventListener('click', () => {
+        incrementDownloadCount(driveDownloadsRef);
+        window.open("https://drive.google.com/file/d/1Vo80z3lfxE58sdOrFnIFKdN7tCldjZv3/view?usp=sharing", "_blank");
+    });
 
-	document.getElementById('mediafire-btn').addEventListener('click', () => {
-	incrementDownloadCount(mediafireDownloadsRef);
-	// Aquí coloca el enlace de Mediafire
-	window.open("https://drive.google.com/file/d/1Vo80z3lfxE58sdOrFnIFKdN7tCldjZv3/view?usp=sharing", "_blank");
-	});
-  </script>
+    document.getElementById('mediafire-btn').addEventListener('click', () => {
+        incrementDownloadCount(mediafireDownloadsRef);
+        // Aquí coloca el enlace de Mediafire
+        window.open("https://drive.google.com/file/d/1Vo80z3lfxE58sdOrFnIFKdN7tCldjZv3/view?usp=sharing", "_blank");
+    });
+</script>
 
 	</body>
 </html>
